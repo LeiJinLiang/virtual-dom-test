@@ -1,4 +1,4 @@
-var app = new Template({
+var app = new Compile({
     el: '#app',
     data: {
         message: 'My Template!',
