@@ -5,6 +5,6 @@ const items = [
     { name: 'Panasonic NA98C', price: 1299.00 },
 ];
 
-var template = document.querySelector('#template').innerHTML;
+var tpl = document.querySelector('#template').innerHTML;
 var result = document.querySelector('.result');
-result.innerHTML =tmpl(template, items);
+result.innerHTML =template(tpl, items);

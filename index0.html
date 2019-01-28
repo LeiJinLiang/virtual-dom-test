@@ -10,7 +10,6 @@
 
 <body>
 <script id="template" type="template">
-    <ul>
         <% for (var i = 0; i < items.length; i++) { %>
         Name: <%=items[i].name%>
         <br/>
@@ -18,9 +17,27 @@
         <br/>
         <br/>
         <% } %>
-    </ul>
 </script>
 <div class="result"></div>
-<script src="./js/lib/tmpl.js" type="text/javascript"></script>
-<script src="./js/jquery_tmpl.js" type="text/javascript"></script>
+<!-- <script src="./js/lib/test.js" type="text/javascript"></script>
+<script src="./js/jquery_tmpl.js" type="text/javascript"></script> -->
+<script>
+    const items = [
+        { name: 'iPhone X', price: 8688.00 },
+        { name: 'GoPro Hero5 Black', price: 2988.00 },
+        { name: 'Nintendo Switch', price: 1988.00 },
+        { name: 'Panasonic NA98C', price: 1299.00 },
+    ];
+    var str1 = document.querySelector('#template').innerHTML;
+    const tpl = (str, data) => {
+    const tplStr = str.replace(/\n/g, '')
+        .replace(/\<\%\=(.+?)\%\>/g, (match, p) => `'+(${p})+'`)
+        .replace(/\<\%([\s\S]+?)\%\>/g, (match, p) => `'; ${p}; tpl += '`)
+    console.log(tplStr)
+    return new Function('data', `var tpl='${tplStr}'; return tpl;`)(data)
+}
+// 测试
+var result = document.querySelector('.result');
+result.innerHTML = tpl(str1,items)
+</script>
 </body>
