@@ -43,16 +43,19 @@ Compile.prototype.compileElement = function(node){
      if(_this.isDirective(attrName)){
         // 与节点匹配
         var expr = attr.value
-        var type = attrName.slice(2)
+        var type = attrName.includes(':')?attrName.split(':')[0].slice(2):attrName.slice(2)
          // node this.vm.$data // v-model v-text, v-html
          // todo .......
-         if(type.includes('bind')){
-            CompileUtil['bind'](node,_this.vm,expr)    
-         }else{
-            CompileUtil[type](node,_this.vm,expr)
-         }
+        
+        CompileUtil[type](node,_this.vm,expr,_this)
+        if(type != 'for'){
+            _this.compile(node)
+        }
      }
   })
+  if(attrs.length == 0){
+        _this.compile(node)
+  }
 }
 /**
  * 编译文本 v-text
@@ -68,6 +71,10 @@ Compile.prototype.compileText = function(node){
    }
 }
 
+/**
+ * fragment  内存中的元素
+ * isFor : boolen 是否是for指令编译默认false
+ */
 Compile.prototype.compile = function(frament){
     var _this = this
     // 递归
@@ -77,7 +84,6 @@ Compile.prototype.compile = function(frament){
              // element 节点 
              // 编译元素
              _this.compileElement(node)
-             _this.compile(node)  
         }else{
             // text 节点
             // 编译文本
@@ -89,10 +95,11 @@ Compile.prototype.compile = function(frament){
 CompileUtil = {
     // 获取实例对应的数据
     getVal (vm,expr) {
-       expr = expr.split('.')
-       return expr.reduce(function(prev,next){
-          return prev[next]  
-       },vm.$data)
+    //    expr = expr.split('.')
+    //    return expr.reduce(function(prev,next){
+    //       return prev[next]  
+    //    },vm.$data)
+     return 'jinlei'
     },
     /**
      * 文本处理
@@ -109,7 +116,25 @@ CompileUtil = {
         node.setAttribute(expr,this.getVal(vm,expr))
     },
     if (node,vm,expr){
-
+        
+    },
+    for(node,vm,expr,_this){
+        var self = _this
+        expr = expr.split('of') && expr.split('of')[1] && expr.split('of')[1].trim()
+        var parentNode = node.parentNode;
+		var startNode = document.createTextNode('');
+		var endNode = document.createTextNode('');
+		var range = document.createRange();
+		parentNode.replaceChild(endNode, node); // 去掉原始模板
+        parentNode.insertBefore(startNode, endNode);
+        range.setStart(startNode, 0);
+        range.setEnd(endNode, 0);
+        range.deleteContents();   
+        vm.$data[expr].forEach(function(){
+            var cloneNode = node.cloneNode(true);
+            parentNode.insertBefore(cloneNode, endNode);
+            self.compile(cloneNode,true)
+        })
     },
     model(node,vm,expr) {
        var updateFn = this.updater['modelUpdater'] 
