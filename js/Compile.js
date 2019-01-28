@@ -98,16 +98,26 @@ Compile.prototype.compile = function(frament,options){
 CompileUtil = {
     // 获取实例对应的数据
     getVal (vm,expr,options) {
-        expr = expr.trim()   
-        expr = expr.split('.')
-        if(options && options.isFor){
-            var result = options.data[expr[1]]
-            return result     
+        var hasExpress = false
+        expr = expr.trim() 
+        if(expr.includes('$')){
+           hasExpress = true
+           var item = Object.assign({},options.data)
+           expr = expr.split('$')[1]
+           return eval(expr)      
         }else{
-            return expr.reduce(function(prev,next){
-                return prev[next]  
-            },vm.$data)
-        }
+           expr = expr.split('.') 
+        }  
+        if(!hasExpress){
+            if(options && options.isFor){
+                var result = options.data[expr[1]]
+                return result     
+            }else{
+                return expr.reduce(function(prev,next){
+                    return prev[next]  
+                },vm.$data)
+            }     
+        } 
     },
     /**
      * 文本处理
@@ -124,7 +134,10 @@ CompileUtil = {
         node.setAttribute(expr,this.getVal(vm,expr))
     },
     if (node,vm,expr){
-        
+        node.removeAttribute('v-if',+expr)
+        if(expr != 'show'){
+            node.remove() 
+        }
     },
     for(node,vm,expr,_this){
         var self = _this
@@ -140,6 +153,8 @@ CompileUtil = {
         range.deleteContents();   
         vm.$data[expr].forEach(function(item,idx){
             var cloneNode = node.cloneNode(true);
+            cloneNode.removeAttribute('v-for')
+            cloneNode.setAttribute('key',idx)
             parentNode.insertBefore(cloneNode, endNode);
             var opt = {
                 isFor : true,
