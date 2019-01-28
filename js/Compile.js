@@ -60,22 +60,25 @@ Compile.prototype.compileElement = function(node){
 /**
  * 编译文本 v-text
  */
-Compile.prototype.compileText = function(node){
+Compile.prototype.compileText = function(node,options){
    // 带{{}}
    var expr = node.textContent
    var reg = /\{\{([^}]+)\}\}/g
    if(reg.test(expr)){
        // node this.vm.$data 
        // todo ....... 
-       CompileUtil['text'](node,this.vm,expr)
+       CompileUtil['text'](node,this.vm,expr,options)
    }
 }
 
 /**
  * fragment  内存中的元素
- * isFor : boolen 是否是for指令编译默认false
+ * options : {
+ *   isFor : true,
+ *   key : items     
+ * }
  */
-Compile.prototype.compile = function(frament){
+Compile.prototype.compile = function(frament,options){
     var _this = this
     // 递归
     var childNodes = frament.childNodes
@@ -87,29 +90,34 @@ Compile.prototype.compile = function(frament){
         }else{
             // text 节点
             // 编译文本
-            _this.compileText(node)
+            _this.compileText(node,options)
         }
     })
 }
 
 CompileUtil = {
     // 获取实例对应的数据
-    getVal (vm,expr) {
-    //    expr = expr.split('.')
-    //    return expr.reduce(function(prev,next){
-    //       return prev[next]  
-    //    },vm.$data)
-     return 'jinlei'
+    getVal (vm,expr,options) {
+        expr = expr.trim()   
+        expr = expr.split('.')
+        if(options && options.isFor){
+            var result = options.data[expr[1]]
+            return result     
+        }else{
+            return expr.reduce(function(prev,next){
+                return prev[next]  
+            },vm.$data)
+        }
     },
     /**
      * 文本处理
      */
-    text (node,vm,expr) {
+    text (node,vm,expr,options) {
         var value = expr.replace(/\{\{([^}]+)\}\}/g,function(){
             return arguments[1]
         })
        var updateFn = this.updater['textUpdater'] 
-       updateFn && updateFn(node,this.getVal(vm,value))
+       updateFn && updateFn(node,this.getVal(vm,value,options))
     },
     bind (node,vm,expr) {
         node.removeAttribute('v-bind:'+expr)
@@ -130,10 +138,14 @@ CompileUtil = {
         range.setStart(startNode, 0);
         range.setEnd(endNode, 0);
         range.deleteContents();   
-        vm.$data[expr].forEach(function(){
+        vm.$data[expr].forEach(function(item,idx){
             var cloneNode = node.cloneNode(true);
             parentNode.insertBefore(cloneNode, endNode);
-            self.compile(cloneNode,true)
+            var opt = {
+                isFor : true,
+                data : item
+            }
+            self.compile(cloneNode,opt)
         })
     },
     model(node,vm,expr) {
