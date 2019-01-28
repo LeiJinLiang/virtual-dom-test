@@ -97,21 +97,21 @@ Compile.prototype.compile = function(frament,options){
 
 CompileUtil = {
     // 获取实例对应的数据
-    getVal (vm,expr,options) {
+    getVal (vm,expr,text,options) {
         var hasExpress = false
         expr = expr.trim() 
         if(expr.includes('$')){
            hasExpress = true
            var item = Object.assign({},options.data)
            expr = expr.split('$')[1]
-           return eval(expr)      
+           return text + eval(expr)      
         }else{
            expr = expr.split('.') 
         }  
         if(!hasExpress){
             if(options && options.isFor){
                 var result = options.data[expr[1]]
-                return result     
+                return text + result     
             }else{
                 return expr.reduce(function(prev,next){
                     return prev[next]  
@@ -126,8 +126,9 @@ CompileUtil = {
         var value = expr.replace(/\{\{([^}]+)\}\}/g,function(){
             return arguments[1]
         })
-       var updateFn = this.updater['textUpdater'] 
-       updateFn && updateFn(node,this.getVal(vm,value,options))
+        var pureText = expr.split('{{').length>0?expr.split('{{')[0]:''
+        var updateFn = this.updater['textUpdater'] 
+        updateFn && updateFn(node,this.getVal(vm,value,pureText,options))
     },
     bind (node,vm,expr) {
         node.removeAttribute('v-bind:'+expr)
